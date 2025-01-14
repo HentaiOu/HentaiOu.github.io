@@ -142,6 +142,8 @@
         <div class="atajos-list" id="atajosList">
             <h2>Atajos Guardados</h2>
         </div>
+
+        <button onclick="eliminarTodos()">Eliminar Todos los Atajos</button>
     </div>
 
     <script>
@@ -196,6 +198,7 @@
                 atajoDiv.innerHTML = `
                     <span>${shortcut} → ${content.texto}</span>
                     <button onclick="eliminarAtajo('${shortcut}')">Eliminar</button>
+                    <button onclick="agregarImagen('${shortcut}')">Añadir Imagen</button>
                 `;
                 atajosList.appendChild(atajoDiv);
             }
@@ -204,6 +207,15 @@
         function eliminarAtajo(shortcut) {
             delete atajos[shortcut];
             actualizarLocalStorage();
+        }
+
+        function eliminarTodos() {
+            if (confirm('¿Estás seguro de que deseas eliminar todos los atajos?')) {
+                for (const shortcut in atajos) {
+                    delete atajos[shortcut];
+                }
+                actualizarLocalStorage();
+            }
         }
 
         function exportarAtajos() {
@@ -286,6 +298,26 @@
                 return expansion;
             }
             return input;
+        }
+
+        function agregarImagen(shortcut) {
+            const imageFile = document.createElement('input');
+            imageFile.type = 'file';
+            imageFile.accept = 'image/*';
+            imageFile.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const imageData = event.target.result;
+                        atajos[shortcut].imagen = imageData;
+                        actualizarLocalStorage();
+                        alert('Imagen añadida con éxito');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            imageFile.click();
         }
 
         atajosForm.addEventListener('submit', (e) => {
