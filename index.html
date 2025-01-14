@@ -105,6 +105,11 @@
             background-color: #dc3545;
             font-size: 12px;
         }
+        .output-controls {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -120,6 +125,10 @@
         <textarea id="editor" placeholder="Escribe aquí..."></textarea>
         <div class="output" id="output">
             <div class="copied-message" id="copiedMessage">¡Copiado!</div>
+            <div id="outputContent"></div>
+            <div class="output-controls">
+                <button onclick="copiarManualmente()">Copiar</button>
+            </div>
         </div>
 
         <form class="atajos-form" id="atajosForm">
@@ -132,7 +141,6 @@
 
         <div class="atajos-list" id="atajosList">
             <h2>Atajos Guardados</h2>
-            <!-- Aquí se mostrarán los atajos -->
         </div>
     </div>
 
@@ -140,6 +148,7 @@
         const atajos = JSON.parse(localStorage.getItem('atajos')) || {};
         const editor = document.getElementById('editor');
         const output = document.getElementById('output');
+        const outputContent = document.getElementById('outputContent');
         const atajosForm = document.getElementById('atajosForm');
         const copiedMessage = document.getElementById('copiedMessage');
         const atajosList = document.getElementById('atajosList');
@@ -149,6 +158,29 @@
             setTimeout(() => {
                 copiedMessage.style.display = 'none';
             }, 2000);
+        }
+
+        function copiarManualmente() {
+            const contenido = outputContent.innerHTML;
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = contenido;
+            document.body.appendChild(tempDiv);
+
+            const range = document.createRange();
+            range.selectNodeContents(tempDiv);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+
+            try {
+                document.execCommand('copy');
+                mostrarMensajeCopied();
+            } catch (err) {
+                alert('No se pudo copiar el contenido al portapapeles');
+            }
+
+            selection.removeAllRanges();
+            document.body.removeChild(tempDiv);
         }
 
         function actualizarLocalStorage() {
@@ -225,7 +257,11 @@
                     expansion += `<br><img src="${atajo.imagen}" alt="imagen expandida" />`;
                 }
 
-                palabras[palabras.length - 1] = expansion;
+                // Mantener solo el punto después de expandir
+                editor.value = editor.value.slice(0, editor.value.lastIndexOf(ultimaPalabra)) + '.';
+                
+                // Colocar el cursor al final
+                editor.selectionStart = editor.selectionEnd = editor.value.length;
 
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = expansion;
@@ -246,8 +282,10 @@
 
                 selection.removeAllRanges();
                 document.body.removeChild(tempDiv);
+                
+                return expansion;
             }
-            return palabras.join(' ');
+            return input;
         }
 
         atajosForm.addEventListener('submit', (e) => {
@@ -287,7 +325,7 @@
         editor.addEventListener('input', () => {
             const texto = editor.value;
             const textoExpandido = expandirTexto(texto);
-            output.innerHTML = textoExpandido + '<div class="copied-message" id="copiedMessage">¡Copiado!</div>';
+            outputContent.innerHTML = textoExpandido;
         });
 
         mostrarAtajosGuardados();
