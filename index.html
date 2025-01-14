@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expansor de Atajos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f4f9;
+        }
+        .container {
+            margin-top: 50px;
+            width: 90%;
+            max-width: 800px;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .output {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            position: relative;
+            min-height: 100px;
+        }
+        .output img {
+            max-width: 300px;
+            height: auto;
+            display: block;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+        }
+        .atajos-form {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .atajos-form input, .atajos-form button {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        #shortcut {
+            width: 100px;
+        }
+        button {
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .copied-message {
+            position: absolute;
+            top: -25px;
+            right: 0;
+            background-color: #4CAF50;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            display: none;
+        }
+        .button-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .atajos-list {
+            margin-top: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .atajo-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .atajo-item button {
+            padding: 5px 10px;
+            background-color: #dc3545;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Expansor de Atajos</h1>
+        
+        <div class="button-container">
+            <button onclick="exportarAtajos()">Exportar Atajos</button>
+            <button onclick="importarAtajos()">Importar Atajos</button>
+            <input type="file" id="importFile" accept=".json" style="display: none;" />
+        </div>
+
+        <textarea id="editor" placeholder="Escribe aquí..."></textarea>
+        <div class="output" id="output">
+            <div class="copied-message" id="copiedMessage">¡Copiado!</div>
+        </div>
+
+        <form class="atajos-form" id="atajosForm">
+            <h2>Agregar Atajo</h2>
+            <input type="text" id="shortcut" placeholder=".hi" required />
+            <input type="text" id="expansion" placeholder="Texto de expansión" required />
+            <input type="file" id="imageFile" accept="image/*" />
+            <button type="submit">Agregar Atajo</button>
+        </form>
+
+        <div class="atajos-list" id="atajosList">
+            <h2>Atajos Guardados</h2>
+            <!-- Aquí se mostrarán los atajos -->
+        </div>
+    </div>
+
+    <script>
+        const atajos = JSON.parse(localStorage.getItem('atajos')) || {};
+        const editor = document.getElementById('editor');
+        const output = document.getElementById('output');
+        const atajosForm = document.getElementById('atajosForm');
+        const copiedMessage = document.getElementById('copiedMessage');
+        const atajosList = document.getElementById('atajosList');
+
+        function mostrarMensajeCopied() {
+            copiedMessage.style.display = 'block';
+            setTimeout(() => {
+                copiedMessage.style.display = 'none';
+            }, 2000);
+        }
+
+        function actualizarLocalStorage() {
+            localStorage.setItem('atajos', JSON.stringify(atajos));
+            mostrarAtajosGuardados();
+        }
+
+        function mostrarAtajosGuardados() {
+            atajosList.innerHTML = '<h2>Atajos Guardados</h2>';
+            for (const [shortcut, content] of Object.entries(atajos)) {
+                const atajoDiv = document.createElement('div');
+                atajoDiv.className = 'atajo-item';
+                atajoDiv.innerHTML = `
+                    <span>${shortcut} → ${content.texto}</span>
+                    <button onclick="eliminarAtajo('${shortcut}')">Eliminar</button>
+                `;
+                atajosList.appendChild(atajoDiv);
+            }
+        }
+
+        function eliminarAtajo(shortcut) {
+            delete atajos[shortcut];
+            actualizarLocalStorage();
+        }
+
+        function exportarAtajos() {
+            const dataStr = JSON.stringify(atajos, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'atajos.json';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+
+        function importarAtajos() {
+            document.getElementById('importFile').click();
+        }
+
+        document.getElementById('importFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const importedAtajos = JSON.parse(event.target.result);
+                        Object.assign(atajos, importedAtajos);
+                        actualizarLocalStorage();
+                        alert('Atajos importados con éxito');
+                    } catch (error) {
+                        alert('Error al importar atajos');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function expandirTexto(input) {
+            const palabras = input.split(' ');
+            const ultimaPalabra = palabras[palabras.length - 1];
+
+            if (atajos[ultimaPalabra]) {
+                const atajo = atajos[ultimaPalabra];
+                let expansion = '';
+
+                if (atajo.texto) {
+                    expansion += atajo.texto;
+                }
+
+                if (atajo.imagen) {
+                    expansion += `<br><img src="${atajo.imagen}" alt="imagen expandida" />`;
+                }
+
+                palabras[palabras.length - 1] = expansion;
+
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = expansion;
+                document.body.appendChild(tempDiv);
+
+                const range = document.createRange();
+                range.selectNodeContents(tempDiv);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+
+                try {
+                    document.execCommand('copy');
+                    mostrarMensajeCopied();
+                } catch (err) {
+                    alert('No se pudo copiar el contenido al portapapeles');
+                }
+
+                selection.removeAllRanges();
+                document.body.removeChild(tempDiv);
+            }
+            return palabras.join(' ');
+        }
+
+        atajosForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const shortcut = document.getElementById('shortcut').value.trim();
+            const expansion = document.getElementById('expansion').value.trim();
+            const imageFile = document.getElementById('imageFile').files[0];
+
+            if (shortcut && (expansion || imageFile)) {
+                if (imageFile) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const imageData = event.target.result;
+                        atajos[shortcut] = {
+                            texto: expansion,
+                            imagen: imageData
+                        };
+                        actualizarLocalStorage();
+                        alert('Atajo agregado con éxito');
+                        atajosForm.reset();
+                    };
+                    reader.readAsDataURL(imageFile);
+                } else {
+                    atajos[shortcut] = {
+                        texto: expansion,
+                        imagen: ''
+                    };
+                    actualizarLocalStorage();
+                    alert('Atajo agregado con éxito');
+                    atajosForm.reset();
+                }
+            } else {
+                alert('Por favor completa los campos requeridos.');
+            }
+        });
+
+        editor.addEventListener('input', () => {
+            const texto = editor.value;
+            const textoExpandido = expandirTexto(texto);
+            output.innerHTML = textoExpandido + '<div class="copied-message" id="copiedMessage">¡Copiado!</div>';
+        });
+
+        mostrarAtajosGuardados();
+    </script>
+</body>
+</html>
