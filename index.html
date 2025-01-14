@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -120,6 +120,7 @@
             <button onclick="exportarAtajos()">Exportar Atajos</button>
             <button onclick="importarAtajos()">Importar Atajos</button>
             <input type="file" id="importFile" accept=".json" style="display: none;" />
+            <button onclick="eliminarTodos()">Eliminar Todos</button>
         </div>
 
         <textarea id="editor" placeholder="Escribe aquí..."></textarea>
@@ -142,8 +143,6 @@
         <div class="atajos-list" id="atajosList">
             <h2>Atajos Guardados</h2>
         </div>
-
-        <button onclick="eliminarTodos()">Eliminar Todos los Atajos</button>
     </div>
 
     <script>
@@ -207,7 +206,10 @@
         function eliminarAtajo(shortcut) {
             delete atajos[shortcut];
             actualizarLocalStorage();
-            document.getElementById('shortcut').focus();  // Coloca el foco en el campo de entrada
+            setTimeout(() => {
+                document.getElementById('shortcut').focus();
+                document.getElementById('editor').focus(); // Establece el foco en el editor de texto
+            }, 100);
         }
 
         function eliminarTodos() {
@@ -216,7 +218,10 @@
                     delete atajos[shortcut];
                 }
                 actualizarLocalStorage();
-                document.getElementById('shortcut').focus();  // Coloca el foco en el campo de entrada
+                setTimeout(() => {
+                    document.getElementById('shortcut').focus();
+                    document.getElementById('editor').focus(); // Establece el foco en el editor de texto
+                }, 100);
             }
         }
 
@@ -302,26 +307,6 @@
             return input;
         }
 
-        function agregarImagen(shortcut) {
-            const imageFile = document.createElement('input');
-            imageFile.type = 'file';
-            imageFile.accept = 'image/*';
-            imageFile.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        const imageData = event.target.result;
-                        atajos[shortcut].imagen = imageData;
-                        actualizarLocalStorage();
-                        alert('Imagen añadida con éxito');
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-            imageFile.click();
-        }
-
         atajosForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const shortcut = document.getElementById('shortcut').value.trim();
@@ -340,6 +325,10 @@
                         actualizarLocalStorage();
                         alert('Atajo agregado con éxito');
                         atajosForm.reset();
+                        setTimeout(() => {
+                            document.getElementById('shortcut').focus();
+                            document.getElementById('editor').focus();
+                        }, 100);
                     };
                     reader.readAsDataURL(imageFile);
                 } else {
@@ -350,6 +339,10 @@
                     actualizarLocalStorage();
                     alert('Atajo agregado con éxito');
                     atajosForm.reset();
+                    setTimeout(() => {
+                        document.getElementById('shortcut').focus();
+                        document.getElementById('editor').focus();
+                    }, 100);
                 }
             } else {
                 alert('Por favor completa los campos requeridos.');
