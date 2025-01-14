@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -55,6 +55,11 @@
             border-radius: 3px;
             display: none;
         }
+        .button-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
         button {
             background-color: #007bff;
             color: #fff;
@@ -66,20 +71,53 @@
         button:hover {
             background-color: #0056b3;
         }
+        .atajos-form {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .atajos-form input, .atajos-form button {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        #shortcut {
+            width: 100px;
+        }
+        .atajos-list {
+            margin-top: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .atajo-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Expansor de Atajos</h1>
         
+        <div class="button-container">
+            <button onclick="exportarAtajos()">Exportar Atajos</button>
+            <button onclick="importarAtajos()">Importar Atajos</button>
+            <input type="file" id="importFile" accept=".json" style="display: none;" />
+        </div>
+
         <textarea id="editor" placeholder="Escribe aquí..."></textarea>
         <div class="output" id="output">
             <div class="copied-message" id="copiedMessage">¡Copiado!</div>
         </div>
 
-        <button id="copyButton" style="display:none;">Copiar al Portapapeles</button>
-
-        <form id="atajosForm">
+        <form class="atajos-form" id="atajosForm">
             <h2>Agregar Atajo</h2>
             <input type="text" id="shortcut" placeholder=".hi" required />
             <input type="text" id="expansion" placeholder="Texto de expansión" required />
@@ -89,6 +127,7 @@
 
         <div class="atajos-list" id="atajosList">
             <h2>Atajos Guardados</h2>
+            <!-- Aquí se mostrarán los atajos -->
         </div>
     </div>
 
@@ -99,7 +138,6 @@
         const atajosForm = document.getElementById('atajosForm');
         const copiedMessage = document.getElementById('copiedMessage');
         const atajosList = document.getElementById('atajosList');
-        const copyButton = document.getElementById('copyButton');
 
         function mostrarMensajeCopied() {
             copiedMessage.style.display = 'block';
@@ -131,6 +169,41 @@
             actualizarLocalStorage();
         }
 
+        function exportarAtajos() {
+            const dataStr = JSON.stringify(atajos, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'atajos.json';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+
+        function importarAtajos() {
+            document.getElementById('importFile').click();
+        }
+
+        document.getElementById('importFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const importedAtajos = JSON.parse(event.target.result);
+                        Object.assign(atajos, importedAtajos);
+                        actualizarLocalStorage();
+                        alert('Atajos importados con éxito');
+                    } catch (error) {
+                        alert('Error al importar atajos');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
         function expandirTexto(input) {
             const palabras = input.split(' ');
             const ultimaPalabra = palabras[palabras.length - 1];
@@ -147,29 +220,13 @@
                     expansion += `<br><img src="${atajo.imagen}" alt="imagen expandida" />`;
                 }
 
+                // Reemplazar la última palabra con la expansión
                 palabras[palabras.length - 1] = expansion;
 
+                // Mostrar el contenido expandido
                 output.innerHTML = expansion;
-
-                // Intentar copiar automáticamente
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = expansion;
-                const textToClipboard = tempDiv.textContent || tempDiv.innerText;
-
-                navigator.clipboard.writeText(textToClipboard).then(() => {
-                    mostrarMensajeCopied();
-                }).catch(err => {
-                    // Si la copia automática falla, mostrar el botón de copiar
-                    copyButton.style.display = 'inline';
-                    copyButton.onclick = () => {
-                        navigator.clipboard.writeText(textToClipboard).then(() => {
-                            mostrarMensajeCopied();
-                        }).catch(err => {
-                            alert('Error al copiar al portapapeles: ' + err);
-                        });
-                    };
-                });
             }
+
             return palabras.join(' ');
         }
 
@@ -209,8 +266,27 @@
 
         editor.addEventListener('input', () => {
             const texto = editor.value;
-            const textoExpandido = expandirTexto(texto);
+            expandirTexto(texto);
         });
+
+        // Función para copiar manualmente el contenido expandido
+        function copiarManual() {
+            const contenido = output.innerHTML; // Contenido del div 'output'
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = contenido;
+
+            const textToClipboard = tempDiv.textContent || tempDiv.innerText;
+
+            navigator.clipboard.writeText(textToClipboard).then(() => {
+                mostrarMensajeCopied();
+            });
+        }
+
+        // Agregar el botón de copiar manualmente
+        const copiarButton = document.createElement('button');
+        copiarButton.textContent = "Copiar Manualmente";
+        copiarButton.onclick = copiarManual;
+        document.querySelector('.button-container').appendChild(copiarButton);
 
         // Cargar atajos guardados al iniciar
         mostrarAtajosGuardados();
