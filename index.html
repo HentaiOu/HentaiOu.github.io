@@ -207,6 +207,7 @@
         function eliminarAtajo(shortcut) {
             delete atajos[shortcut];
             actualizarLocalStorage();
+            document.getElementById('shortcut').focus();  // Coloca el foco en el campo de entrada
         }
 
         function eliminarTodos() {
@@ -215,6 +216,7 @@
                     delete atajos[shortcut];
                 }
                 actualizarLocalStorage();
+                document.getElementById('shortcut').focus();  // Coloca el foco en el campo de entrada
             }
         }
 
