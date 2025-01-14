@@ -230,10 +230,13 @@
                 
                 palabras[palabras.length - 1] = expansion;
                 
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = expansion;
-                const textToClipboard = tempDiv.textContent || tempDiv.innerText;
-                navigator.clipboard.writeText(textToClipboard).then(() => {
+                // Actualiza el área de salida con el contenido expandido
+                output.innerHTML = expansion;
+
+                // Copia el contenido expandido al portapapeles (incluyendo la imagen)
+                navigator.clipboard.write([new ClipboardItem({
+                    "text/html": new Blob([expansion], { type: "text/html" })
+                })]).then(() => {
                     mostrarMensajeCopied();
                 });
             }
@@ -277,16 +280,16 @@
         editor.addEventListener('input', () => {
             const texto = editor.value;
             const textoExpandido = expandirTexto(texto);
-            output.innerHTML = textoExpandido + '<div class="copied-message" id="copiedMessage">¡Copiado!</div>';
+            output.innerHTML = textoExpandido;
         });
 
         function copiarManual() {
             const textoExpandido = output.innerHTML;
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = textoExpandido;
-            const textToClipboard = tempDiv.textContent || tempDiv.innerText;
 
-            navigator.clipboard.writeText(textToClipboard).then(() => {
+            // Copia contenido HTML al portapapeles (con la imagen incluida)
+            navigator.clipboard.write([new ClipboardItem({
+                "text/html": new Blob([textoExpandido], { type: "text/html" })
+            })]).then(() => {
                 mostrarMensajeCopied();
             });
         }
