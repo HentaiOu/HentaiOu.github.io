@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -60,17 +60,6 @@
             gap: 10px;
             margin-bottom: 20px;
         }
-        button {
-            background-color: #007bff;
-            color: #fff;
-            cursor: pointer;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
         .atajos-form {
             margin-top: 30px;
             display: flex;
@@ -86,6 +75,17 @@
         #shortcut {
             width: 100px;
         }
+        button {
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
         .atajos-list {
             margin-top: 20px;
             background: white;
@@ -99,6 +99,11 @@
             align-items: center;
             padding: 5px;
             border-bottom: 1px solid #eee;
+        }
+        .atajo-item button {
+            padding: 5px 10px;
+            background-color: #dc3545;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -129,6 +134,8 @@
             <h2>Atajos Guardados</h2>
             <!-- Aquí se mostrarán los atajos -->
         </div>
+
+        <button onclick="copiarManual()" id="copyManualBtn">Copiar al portapapeles</button>
     </div>
 
     <script>
@@ -138,6 +145,7 @@
         const atajosForm = document.getElementById('atajosForm');
         const copiedMessage = document.getElementById('copiedMessage');
         const atajosList = document.getElementById('atajosList');
+        const copyManualBtn = document.getElementById('copyManualBtn');
 
         function mostrarMensajeCopied() {
             copiedMessage.style.display = 'block';
@@ -219,14 +227,16 @@
                 if (atajo.imagen) {
                     expansion += `<br><img src="${atajo.imagen}" alt="imagen expandida" />`;
                 }
-
-                // Reemplazar la última palabra con la expansión
+                
                 palabras[palabras.length - 1] = expansion;
-
-                // Mostrar el contenido expandido
-                output.innerHTML = expansion;
+                
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = expansion;
+                const textToClipboard = tempDiv.textContent || tempDiv.innerText;
+                navigator.clipboard.writeText(textToClipboard).then(() => {
+                    mostrarMensajeCopied();
+                });
             }
-
             return palabras.join(' ');
         }
 
@@ -266,15 +276,14 @@
 
         editor.addEventListener('input', () => {
             const texto = editor.value;
-            expandirTexto(texto);
+            const textoExpandido = expandirTexto(texto);
+            output.innerHTML = textoExpandido + '<div class="copied-message" id="copiedMessage">¡Copiado!</div>';
         });
 
-        // Función para copiar manualmente el contenido expandido
         function copiarManual() {
-            const contenido = output.innerHTML; // Contenido del div 'output'
+            const textoExpandido = output.innerHTML;
             const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = contenido;
-
+            tempDiv.innerHTML = textoExpandido;
             const textToClipboard = tempDiv.textContent || tempDiv.innerText;
 
             navigator.clipboard.writeText(textToClipboard).then(() => {
@@ -282,13 +291,6 @@
             });
         }
 
-        // Agregar el botón de copiar manualmente
-        const copiarButton = document.createElement('button');
-        copiarButton.textContent = "Copiar Manualmente";
-        copiarButton.onclick = copiarManual;
-        document.querySelector('.button-container').appendChild(copiarButton);
-
-        // Cargar atajos guardados al iniciar
         mostrarAtajosGuardados();
     </script>
 </body>
