@@ -275,7 +275,7 @@
                 
                 const actions = document.createElement('div');
                 actions.className = 'shortcut-actions';
-                actions.innerHTML = `
+                actions.innerHTML = ` 
                     <button class="btn btn-danger" onclick="deleteShortcut('${shortcut}')">Eliminar</button>
                 `;
 
@@ -300,7 +300,7 @@
 
                 if (items.length > 0) {
                     await navigator.clipboard.write(items);
-                    showToast();
+                    showToast();  // Muestra el mensaje de "Copiado al portapapeles"
                 }
             } catch (error) {
                 console.error('Error al copiar:', error);
@@ -315,8 +315,8 @@
             if (shortcuts[lastWord]) {
                 const shortcut = shortcuts[lastWord];
                 let expansion = shortcut.text || '';
-                
-                // Copiar el contenido expandido
+
+                // Copiar el contenido expandido al portapapeles
                 await copyRichContent(expansion, shortcut.image);
                 
                 // Devolver el texto para la vista previa
