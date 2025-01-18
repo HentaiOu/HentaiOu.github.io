@@ -3,243 +3,372 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expansor de Atajos</title>
+    <title>Text Expander Pro - PureCloud Edition</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        :root {
+            --primary-color: #2563eb;
+            --danger-color: #dc2626;
+            --success-color: #16a34a;
+            --background-color: #f8fafc;
+            --card-background: #ffffff;
+            --border-color: #e2e8f0;
+            --text-color: #1e293b;
+        }
+
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #f4f4f9;
         }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.5;
+        }
+
         .container {
-            margin-top: 50px;
-            width: 90%;
-            max-width: 800px;
+            max-width: 1024px;
+            margin: 2rem auto;
+            padding: 0 1rem;
         }
+
+        .card {
+            background: var(--card-background);
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .header {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #b91c1c;
+        }
+
+        .editor-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .editor-section {
+            flex: 1;
+        }
+
         textarea {
             width: 100%;
-            height: 150px;
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            height: 200px;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            resize: vertical;
         }
+
         .output {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #fff;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            position: relative;
-            min-height: 100px;
+            width: 100%;
+            min-height: 200px;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            background-color: white;
         }
-        .output img {
-            max-width: 300px;
-            height: auto;
-            display: block;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 5px;
+
+        .shortcut-form {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
         }
-        .atajos-form {
-            margin-top: 30px;
+
+        .form-group {
             display: flex;
-            flex-direction: column;
-            gap: 10px;
+            gap: 1rem;
         }
-        .atajos-form input, .atajos-form button {
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+
+        .form-control {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            font-size: 1rem;
         }
-        #shortcut {
-            width: 100px;
+
+        .shortcuts-list {
+            display: grid;
+            gap: 0.5rem;
         }
-        button {
-            background-color: #007bff;
-            color: #fff;
-            cursor: pointer;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .copied-message {
-            position: absolute;
-            top: -25px;
-            right: 0;
-            background-color: #4CAF50;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 3px;
-            display: none;
-        }
-        .button-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .atajos-list {
-            margin-top: 20px;
-            background: white;
-            padding: 15px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
-        .atajo-item {
+
+        .shortcut-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 5px;
-            border-bottom: 1px solid #eee;
+            padding: 0.75rem;
+            background-color: #f8fafc;
+            border-radius: 0.375rem;
+            border: 1px solid var(--border-color);
         }
-        .atajo-item button {
-            padding: 5px 10px;
-            background-color: #dc3545;
-            font-size: 12px;
+
+        .shortcut-content {
+            flex: 1;
+            margin-right: 1rem;
         }
-        .output-controls {
+
+        .shortcut-actions {
             display: flex;
-            justify-content: flex-end;
-            margin-top: 10px;
+            gap: 0.5rem;
+        }
+
+        .copied-toast {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            background-color: var(--success-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .copied-toast.show {
+            opacity: 1;
+        }
+
+        .preview-image {
+            max-width: 200px;
+            max-height: 200px;
+            object-fit: contain;
+        }
+
+        #hiddenClipboard {
+            position: fixed;
+            left: -9999px;
+            top: -9999px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Expansor de Atajos</h1>
-        
-        <div class="button-container">
-            <button onclick="exportarAtajos()">Exportar Atajos</button>
-            <button onclick="importarAtajos()">Importar Atajos</button>
-            <input type="file" id="importFile" accept=".json" style="display: none;" />
-            <button onclick="eliminarTodos()">Eliminar Todos</button>
-        </div>
+        <header class="header">
+            <h1>Text Expander Pro - PureCloud Edition</h1>
+            <p>Write faster with custom shortcuts and snippets</p>
+        </header>
 
-        <textarea id="editor" placeholder="Escribe aquí..."></textarea>
-        <div class="output" id="output">
-            <div class="copied-message" id="copiedMessage">¡Copiado!</div>
-            <div id="outputContent"></div>
-            <div class="output-controls">
-                <button onclick="copiarManualmente()">Copiar</button>
+        <div class="card">
+            <div class="toolbar">
+                <button class="btn btn-primary" onclick="exportShortcuts()">Export</button>
+                <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">Import</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;">
+                <button class="btn btn-danger" onclick="clearAllShortcuts()">Clear All</button>
+            </div>
+
+            <div class="editor-container">
+                <div class="editor-section">
+                    <h2>Input</h2>
+                    <textarea id="editor" placeholder="Start typing... Use your shortcuts after a space"></textarea>
+                </div>
+                <div class="editor-section">
+                    <h2>Preview</h2>
+                    <div id="output" class="output"></div>
+                </div>
             </div>
         </div>
 
-        <form class="atajos-form" id="atajosForm">
-            <h2>Agregar Atajo</h2>
-            <input type="text" id="shortcut" placeholder=".hi" required />
-            <input type="text" id="expansion" placeholder="Texto de expansión" required />
-            <input type="file" id="imageFile" accept="image/*" />
-            <button type="submit">Agregar Atajo</button>
-        </form>
+        <div class="card">
+            <h2>Add New Shortcut</h2>
+            <form id="shortcutForm" class="shortcut-form">
+                <div class="form-group">
+                    <input type="text" id="shortcutText" class="form-control" placeholder="Shortcut (e.g., .hi)" required>
+                    <input type="text" id="expansionText" class="form-control" placeholder="Expansion text" required>
+                </div>
+                <div class="form-group">
+                    <input type="file" id="imageFile" class="form-control" accept="image/*">
+                    <button type="submit" class="btn btn-primary">Add Shortcut</button>
+                </div>
+            </form>
+        </div>
 
-        <div class="atajos-list" id="atajosList">
-            <h2>Atajos Guardados</h2>
+        <div class="card">
+            <h2>Saved Shortcuts</h2>
+            <div id="shortcutsList" class="shortcuts-list"></div>
         </div>
     </div>
 
+    <div id="copiedToast" class="copied-toast">Copied to clipboard!</div>
+    <div id="hiddenClipboard" contenteditable="true"></div>
+
     <script>
-        const atajos = JSON.parse(localStorage.getItem('atajos')) || {};
+        let shortcuts = JSON.parse(localStorage.getItem('shortcuts')) || {};
         const editor = document.getElementById('editor');
         const output = document.getElementById('output');
-        const outputContent = document.getElementById('outputContent');
-        const atajosForm = document.getElementById('atajosForm');
-        const copiedMessage = document.getElementById('copiedMessage');
-        const atajosList = document.getElementById('atajosList');
+        const shortcutForm = document.getElementById('shortcutForm');
+        const copiedToast = document.getElementById('copiedToast');
+        const hiddenClipboard = document.getElementById('hiddenClipboard');
 
-        function mostrarMensajeCopied() {
-            copiedMessage.style.display = 'block';
-            setTimeout(() => {
-                copiedMessage.style.display = 'none';
-            }, 2000);
+        function showToast() {
+            copiedToast.classList.add('show');
+            setTimeout(() => copiedToast.classList.remove('show'), 2000);
         }
 
-        function copiarManualmente() {
-            const contenido = outputContent.innerHTML;
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = contenido;
-            document.body.appendChild(tempDiv);
-
-            const range = document.createRange();
-            range.selectNodeContents(tempDiv);
-            const selection = window.getSelection();
-            selection.removeAllRanges();
-            selection.addRange(range);
-
-            try {
-                document.execCommand('copy');
-                mostrarMensajeCopied();
-            } catch (err) {
-                alert('No se pudo copiar el contenido al portapapeles');
-            }
-
-            selection.removeAllRanges();
-            document.body.removeChild(tempDiv);
+        function updateLocalStorage() {
+            localStorage.setItem('shortcuts', JSON.stringify(shortcuts));
+            renderShortcutsList();
         }
 
-        function actualizarLocalStorage() {
-            localStorage.setItem('atajos', JSON.stringify(atajos));
-            mostrarAtajosGuardados();
-        }
+        function renderShortcutsList() {
+            const shortcutsList = document.getElementById('shortcutsList');
+            shortcutsList.innerHTML = '';
 
-        function mostrarAtajosGuardados() {
-            atajosList.innerHTML = '<h2>Atajos Guardados</h2>';
-            for (const [shortcut, content] of Object.entries(atajos)) {
-                const atajoDiv = document.createElement('div');
-                atajoDiv.className = 'atajo-item';
-                atajoDiv.innerHTML = `
-                    <span>${shortcut} → ${content.texto}</span>
-                    <button onclick="eliminarAtajo('${shortcut}')">Eliminar</button>
-                    <button onclick="agregarImagen('${shortcut}')">Añadir Imagen</button>
+            Object.entries(shortcuts).forEach(([shortcut, data]) => {
+                const item = document.createElement('div');
+                item.className = 'shortcut-item';
+                
+                const content = document.createElement('div');
+                content.className = 'shortcut-content';
+                content.innerHTML = `
+                    <strong>${shortcut}</strong> → ${data.text || ''}
+                    ${data.image ? '<br><img src="' + data.image + '" class="preview-image">' : ''}
                 `;
-                atajosList.appendChild(atajoDiv);
-            }
+                
+                const actions = document.createElement('div');
+                actions.className = 'shortcut-actions';
+                actions.innerHTML = `
+                    <button class="btn btn-danger" onclick="deleteShortcut('${shortcut}')">Delete</button>
+                `;
+
+                item.appendChild(content);
+                item.appendChild(actions);
+                shortcutsList.appendChild(item);
+            });
         }
 
-        function eliminarAtajo(shortcut) {
-            delete atajos[shortcut];
-            actualizarLocalStorage();
-            setTimeout(() => {
-                document.getElementById('shortcut').focus();
-                document.getElementById('editor').focus(); // Establece el foco en el editor de texto
-            }, 100);
-        }
+        async function expandText(input) {
+            const words = input.split(' ');
+            const lastWord = words[words.length - 1];
 
-        function eliminarTodos() {
-            if (confirm('¿Estás seguro de que deseas eliminar todos los atajos?')) {
-                for (const shortcut in atajos) {
-                    delete atajos[shortcut];
+            if (shortcuts[lastWord]) {
+                const shortcut = shortcuts[lastWord];
+                let expansion = shortcut.text || '';
+                
+                if (shortcut.image) {
+                    try {
+                        // Crear un elemento de imagen temporal
+                        const img = new Image();
+                        img.src = shortcut.image;
+                        await new Promise((resolve) => {
+                            img.onload = resolve;
+                        });
+                        
+                        // Crear un canvas temporal
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        
+                        // Dibujar la imagen en el canvas
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
+                        
+                        // Convertir el canvas a blob
+                        const blob = await new Promise(resolve => canvas.toBlob(resolve));
+                        
+                        // Crear un objeto de tipo ClipboardItem
+                        const item = new ClipboardItem({ 'image/png': blob });
+                        
+                        // Copiar la imagen al portapapeles
+                        await navigator.clipboard.write([item]);
+                        
+                        expansion += '\n[Imagen copiada al portapapeles]';
+                    } catch (error) {
+                        console.error('Error al copiar la imagen:', error);
+                        expansion += '\nError: No se pudo copiar la imagen';
+                    }
                 }
-                actualizarLocalStorage();
-                setTimeout(() => {
-                    document.getElementById('shortcut').focus();
-                    document.getElementById('editor').focus(); // Establece el foco en el editor de texto
-                }, 100);
+
+                words[words.length - 1] = expansion;
+                return words.join(' ');
+            }
+            return input;
+        }
+
+        async function copyToClipboard(text, hasImage) {
+            if (!hasImage) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                } catch (err) {
+                    // Fallback para navegadores que no soporten la API del portapapeles
+                    hiddenClipboard.textContent = text;
+                    hiddenClipboard.select();
+                    document.execCommand('copy');
+                }
+            }
+            showToast();
+        }
+
+        function deleteShortcut(shortcut) {
+            if (confirm(`Delete shortcut "${shortcut}"?`)) {
+                delete shortcuts[shortcut];
+                updateLocalStorage();
             }
         }
 
-        function exportarAtajos() {
-            const dataStr = JSON.stringify(atajos, null, 2);
+        function clearAllShortcuts() {
+            if (confirm('Delete all shortcuts? This cannot be undone.')) {
+                shortcuts = {};
+                updateLocalStorage();
+            }
+        }
+
+        function exportShortcuts() {
+            const dataStr = JSON.stringify(shortcuts, null, 2);
             const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = window.URL.createObjectURL(blob);
+            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'atajos.json';
+            a.download = 'text-expander-shortcuts.json';
             document.body.appendChild(a);
             a.click();
-            window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
-        }
-
-        function importarAtajos() {
-            document.getElementById('importFile').click();
+            URL.revokeObjectURL(url);
         }
 
         document.getElementById('importFile').addEventListener('change', (e) => {
@@ -248,114 +377,66 @@
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     try {
-                        const importedAtajos = JSON.parse(event.target.result);
-                        Object.assign(atajos, importedAtajos);
-                        actualizarLocalStorage();
-                        alert('Atajos importados con éxito');
+                        const imported = JSON.parse(event.target.result);
+                        shortcuts = { ...shortcuts, ...imported };
+                        updateLocalStorage();
+                        alert('Shortcuts imported successfully!');
                     } catch (error) {
-                        alert('Error al importar atajos');
+                        alert('Error importing shortcuts. Please check the file format.');
                     }
                 };
                 reader.readAsText(file);
             }
         });
 
-        function expandirTexto(input) {
-            const palabras = input.split(' ');
-            const ultimaPalabra = palabras[palabras.length - 1];
-
-            if (atajos[ultimaPalabra]) {
-                const atajo = atajos[ultimaPalabra];
-                let expansion = '';
-
-                if (atajo.texto) {
-                    expansion += atajo.texto;
-                }
-
-                if (atajo.imagen) {
-                    expansion += `<br><img src="${atajo.imagen}" alt="imagen expandida" />`;
-                }
-
-                // Mantener solo el punto después de expandir
-                editor.value = editor.value.slice(0, editor.value.lastIndexOf(ultimaPalabra)) + '.';
-                
-                // Colocar el cursor al final
-                editor.selectionStart = editor.selectionEnd = editor.value.length;
-
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = expansion;
-                document.body.appendChild(tempDiv);
-
-                const range = document.createRange();
-                range.selectNodeContents(tempDiv);
-                const selection = window.getSelection();
-                selection.removeAllRanges();
-                selection.addRange(range);
-
-                try {
-                    document.execCommand('copy');
-                    mostrarMensajeCopied();
-                } catch (err) {
-                    alert('No se pudo copiar el contenido al portapapeles');
-                }
-
-                selection.removeAllRanges();
-                document.body.removeChild(tempDiv);
-                
-                return expansion;
-            }
-            return input;
-        }
-
-        atajosForm.addEventListener('submit', (e) => {
+        shortcutForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const shortcut = document.getElementById('shortcut').value.trim();
-            const expansion = document.getElementById('expansion').value.trim();
+            const shortcut = document.getElementById('shortcutText').value.trim();
+            const expansion = document.getElementById('expansionText').value.trim();
             const imageFile = document.getElementById('imageFile').files[0];
 
-            if (shortcut && (expansion || imageFile)) {
-                if (imageFile) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        const imageData = event.target.result;
-                        atajos[shortcut] = {
-                            texto: expansion,
-                            imagen: imageData
-                        };
-                        actualizarLocalStorage();
-                        alert('Atajo agregado con éxito');
-                        atajosForm.reset();
-                        setTimeout(() => {
-                            document.getElementById('shortcut').focus();
-                            document.getElementById('editor').focus();
-                        }, 100);
+            if (!shortcut.startsWith('.')) {
+                alert('Shortcut must start with a dot (.)');
+                return;
+            }
+
+            if (imageFile) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    shortcuts[shortcut] = {
+                        text: expansion,
+                        image: event.target.result
                     };
-                    reader.readAsDataURL(imageFile);
-                } else {
-                    atajos[shortcut] = {
-                        texto: expansion,
-                        imagen: ''
-                    };
-                    actualizarLocalStorage();
-                    alert('Atajo agregado con éxito');
-                    atajosForm.reset();
-                    setTimeout(() => {
-                        document.getElementById('shortcut').focus();
-                        document.getElementById('editor').focus();
-                    }, 100);
-                }
+                    updateLocalStorage();
+                    shortcutForm.reset();
+                };
+                reader.readAsDataURL(imageFile);
             } else {
-                alert('Por favor completa los campos requeridos.');
+                shortcuts[shortcut] = {
+                    text: expansion
+                };
+                updateLocalStorage();
+                shortcutForm.reset();
             }
         });
 
-        editor.addEventListener('input', () => {
-            const texto = editor.value;
-            const textoExpandido = expandirTexto(texto);
-            outputContent.innerHTML = textoExpandido;
+        editor.addEventListener('input', async () => {
+            const text = editor.value;
+            const expanded = await expandText(text);
+            output.innerHTML = expanded;
+
+            const words = text.split(' ');
+            const lastWord = words[words.length - 1];
+
+            if (shortcuts[lastWord]) {
+                const hasImage = shortcuts[lastWord].image;
+                await copyToClipboard(expanded, hasImage);
+                editor.value = editor.value.slice(0, editor.value.lastIndexOf(lastWord)) + '.';
+                editor.selectionStart = editor.selectionEnd = editor.value.length;
+            }
         });
 
-        mostrarAtajosGuardados();
+        renderShortcutsList();
     </script>
 </body>
 </html>
