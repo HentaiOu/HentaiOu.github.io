@@ -287,36 +287,21 @@
 
         async function copyRichContent(text, imageData) {
             try {
-                // Preparar el contenido
-                richTextArea.innerHTML = '';
+                const items = [];
+
                 if (text) {
-                    richTextArea.appendChild(document.createTextNode(text));
+                    items.push(new ClipboardItem({ 'text/plain': new Blob([text], { type: 'text/plain' }) }));
                 }
-                
+
                 if (imageData) {
-                    if (text) {
-                        richTextArea.appendChild(document.createElement('br'));
-                    }
-                    const img = document.createElement('img');
-                    img.src = imageData;
-                    richTextArea.appendChild(img);
+                    const blob = await fetch(imageData).then(res => res.blob());
+                    items.push(new ClipboardItem({ [blob.type]: blob }));
                 }
 
-                // Seleccionar el contenido
-                const range = document.createRange();
-                range.selectNodeContents(richTextArea);
-                
-                const selection = window.getSelection();
-                selection.removeAllRanges();
-                selection.addRange(range);
-
-                // Copiar al portapapeles
-                document.execCommand('copy');
-                
-                // Limpiar selección
-                selection.removeAllRanges();
-                
-                showToast();
+                if (items.length > 0) {
+                    await navigator.clipboard.write(items);
+                    showToast();
+                }
             } catch (error) {
                 console.error('Error al copiar:', error);
                 alert('Error al copiar el contenido. Por favor, intenta de nuevo.');
@@ -411,9 +396,9 @@
             }
         });
 
-        editor.addEventListener('input', async () => {
-            const expandedText = await expandText(editor.value);
-            output.innerHTML = expandedText;
+        editor.addEventListener('input', async (e) => {
+            const expanded = await expandText(e.target.value);
+            output.innerHTML = expanded;
         });
 
         renderShortcutsList();
