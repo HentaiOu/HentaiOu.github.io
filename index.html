@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text Expander Pro - PureCloud Edition</title>
+    <title>Text Expander Pro - Complete Edition</title>
     <style>
         :root {
             --primary-color: #2563eb;
@@ -180,62 +180,65 @@
             object-fit: contain;
         }
 
-        #hiddenClipboard {
-            position: fixed;
+        #richTextArea {
+            position: absolute;
             left: -9999px;
-            top: -9999px;
+            top: 0;
+            width: 0;
+            height: 0;
+            overflow: hidden;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header class="header">
-            <h1>Text Expander Pro - PureCloud Edition</h1>
-            <p>Write faster with custom shortcuts and snippets</p>
+            <h1>Text Expander Pro</h1>
+            <p>Escribe más rápido con atajos personalizados</p>
         </header>
 
         <div class="card">
             <div class="toolbar">
-                <button class="btn btn-primary" onclick="exportShortcuts()">Export</button>
-                <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">Import</button>
+                <button class="btn btn-primary" onclick="exportShortcuts()">Exportar</button>
+                <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">Importar</button>
                 <input type="file" id="importFile" accept=".json" style="display: none;">
-                <button class="btn btn-danger" onclick="clearAllShortcuts()">Clear All</button>
+                <button class="btn btn-danger" onclick="clearAllShortcuts()">Eliminar Todo</button>
             </div>
 
             <div class="editor-container">
                 <div class="editor-section">
-                    <h2>Input</h2>
-                    <textarea id="editor" placeholder="Start typing... Use your shortcuts after a space"></textarea>
+                    <h2>Editor</h2>
+                    <textarea id="editor" placeholder="Escribe aquí... Usa tus atajos después de un espacio"></textarea>
                 </div>
                 <div class="editor-section">
-                    <h2>Preview</h2>
+                    <h2>Vista Previa</h2>
                     <div id="output" class="output"></div>
                 </div>
             </div>
         </div>
 
         <div class="card">
-            <h2>Add New Shortcut</h2>
+            <h2>Agregar Nuevo Atajo</h2>
             <form id="shortcutForm" class="shortcut-form">
                 <div class="form-group">
-                    <input type="text" id="shortcutText" class="form-control" placeholder="Shortcut (e.g., .hi)" required>
-                    <input type="text" id="expansionText" class="form-control" placeholder="Expansion text" required>
+                    <input type="text" id="shortcutText" class="form-control" placeholder="Atajo (ej: .hola)" required>
+                    <input type="text" id="expansionText" class="form-control" placeholder="Texto de expansión" required>
                 </div>
                 <div class="form-group">
                     <input type="file" id="imageFile" class="form-control" accept="image/*">
-                    <button type="submit" class="btn btn-primary">Add Shortcut</button>
+                    <button type="submit" class="btn btn-primary">Agregar Atajo</button>
                 </div>
             </form>
         </div>
 
         <div class="card">
-            <h2>Saved Shortcuts</h2>
+            <h2>Atajos Guardados</h2>
             <div id="shortcutsList" class="shortcuts-list"></div>
         </div>
     </div>
 
-    <div id="copiedToast" class="copied-toast">Copied to clipboard!</div>
-    <div id="hiddenClipboard" contenteditable="true"></div>
+    <div id="copiedToast" class="copied-toast">¡Copiado al portapapeles!</div>
+    <div id="richTextArea" contenteditable="true"></div>
 
     <script>
         let shortcuts = JSON.parse(localStorage.getItem('shortcuts')) || {};
@@ -243,7 +246,7 @@
         const output = document.getElementById('output');
         const shortcutForm = document.getElementById('shortcutForm');
         const copiedToast = document.getElementById('copiedToast');
-        const hiddenClipboard = document.getElementById('hiddenClipboard');
+        const richTextArea = document.getElementById('richTextArea');
 
         function showToast() {
             copiedToast.classList.add('show');
@@ -273,13 +276,51 @@
                 const actions = document.createElement('div');
                 actions.className = 'shortcut-actions';
                 actions.innerHTML = `
-                    <button class="btn btn-danger" onclick="deleteShortcut('${shortcut}')">Delete</button>
+                    <button class="btn btn-danger" onclick="deleteShortcut('${shortcut}')">Eliminar</button>
                 `;
 
                 item.appendChild(content);
                 item.appendChild(actions);
                 shortcutsList.appendChild(item);
             });
+        }
+
+        async function copyRichContent(text, imageData) {
+            try {
+                // Preparar el contenido
+                richTextArea.innerHTML = '';
+                if (text) {
+                    richTextArea.appendChild(document.createTextNode(text));
+                }
+                
+                if (imageData) {
+                    if (text) {
+                        richTextArea.appendChild(document.createElement('br'));
+                    }
+                    const img = document.createElement('img');
+                    img.src = imageData;
+                    richTextArea.appendChild(img);
+                }
+
+                // Seleccionar el contenido
+                const range = document.createRange();
+                range.selectNodeContents(richTextArea);
+                
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+
+                // Copiar al portapapeles
+                document.execCommand('copy');
+                
+                // Limpiar selección
+                selection.removeAllRanges();
+                
+                showToast();
+            } catch (error) {
+                console.error('Error al copiar:', error);
+                alert('Error al copiar el contenido. Por favor, intenta de nuevo.');
+            }
         }
 
         async function expandText(input) {
@@ -290,69 +331,24 @@
                 const shortcut = shortcuts[lastWord];
                 let expansion = shortcut.text || '';
                 
-                if (shortcut.image) {
-                    try {
-                        // Crear un elemento de imagen temporal
-                        const img = new Image();
-                        img.src = shortcut.image;
-                        await new Promise((resolve) => {
-                            img.onload = resolve;
-                        });
-                        
-                        // Crear un canvas temporal
-                        const canvas = document.createElement('canvas');
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                        
-                        // Dibujar la imagen en el canvas
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0);
-                        
-                        // Convertir el canvas a blob
-                        const blob = await new Promise(resolve => canvas.toBlob(resolve));
-                        
-                        // Crear un objeto de tipo ClipboardItem
-                        const item = new ClipboardItem({ 'image/png': blob });
-                        
-                        // Copiar la imagen al portapapeles
-                        await navigator.clipboard.write([item]);
-                        
-                        expansion += '\n[Imagen copiada al portapapeles]';
-                    } catch (error) {
-                        console.error('Error al copiar la imagen:', error);
-                        expansion += '\nError: No se pudo copiar la imagen';
-                    }
-                }
-
-                words[words.length - 1] = expansion;
-                return words.join(' ');
+                // Copiar el contenido expandido
+                await copyRichContent(expansion, shortcut.image);
+                
+                // Devolver el texto para la vista previa
+                return expansion + (shortcut.image ? '<br><img src="' + shortcut.image + '" class="preview-image">' : '');
             }
             return input;
         }
 
-        async function copyToClipboard(text, hasImage) {
-            if (!hasImage) {
-                try {
-                    await navigator.clipboard.writeText(text);
-                } catch (err) {
-                    // Fallback para navegadores que no soporten la API del portapapeles
-                    hiddenClipboard.textContent = text;
-                    hiddenClipboard.select();
-                    document.execCommand('copy');
-                }
-            }
-            showToast();
-        }
-
         function deleteShortcut(shortcut) {
-            if (confirm(`Delete shortcut "${shortcut}"?`)) {
+            if (confirm(`¿Eliminar el atajo "${shortcut}"?`)) {
                 delete shortcuts[shortcut];
                 updateLocalStorage();
             }
         }
 
         function clearAllShortcuts() {
-            if (confirm('Delete all shortcuts? This cannot be undone.')) {
+            if (confirm('¿Estás seguro de que deseas eliminar todos los atajos?')) {
                 shortcuts = {};
                 updateLocalStorage();
             }
@@ -364,7 +360,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'text-expander-shortcuts.json';
+            a.download = 'mis-atajos.json';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -380,9 +376,9 @@
                         const imported = JSON.parse(event.target.result);
                         shortcuts = { ...shortcuts, ...imported };
                         updateLocalStorage();
-                        alert('Shortcuts imported successfully!');
+                        alert('¡Atajos importados con éxito!');
                     } catch (error) {
-                        alert('Error importing shortcuts. Please check the file format.');
+                        alert('Error al importar atajos. Revisa el formato del archivo.');
                     }
                 };
                 reader.readAsText(file);
@@ -396,7 +392,7 @@
             const imageFile = document.getElementById('imageFile').files[0];
 
             if (!shortcut.startsWith('.')) {
-                alert('Shortcut must start with a dot (.)');
+                alert('El atajo debe comenzar con un punto (.)');
                 return;
             }
 
@@ -422,20 +418,22 @@
 
         editor.addEventListener('input', async () => {
             const text = editor.value;
-            const expanded = await expandText(text);
-            output.innerHTML = expanded;
-
             const words = text.split(' ');
             const lastWord = words[words.length - 1];
 
             if (shortcuts[lastWord]) {
-                const hasImage = shortcuts[lastWord].image;
-                await copyToClipboard(expanded, hasImage);
+                const expanded = await expandText(text);
+                output.innerHTML = expanded;
+                
+                // Restaurar el editor a solo un punto
                 editor.value = editor.value.slice(0, editor.value.lastIndexOf(lastWord)) + '.';
                 editor.selectionStart = editor.selectionEnd = editor.value.length;
+            } else {
+                output.innerHTML = text;
             }
         });
 
+        // Inicializar la lista de atajos al cargar
         renderShortcutsList();
     </script>
 </body>
