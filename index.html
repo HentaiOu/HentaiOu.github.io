@@ -275,7 +275,7 @@
                 
                 const actions = document.createElement('div');
                 actions.className = 'shortcut-actions';
-                actions.innerHTML = ` 
+                actions.innerHTML = `
                     <button class="btn btn-danger" onclick="deleteShortcut('${shortcut}')">Eliminar</button>
                 `;
 
@@ -288,21 +288,24 @@
         async function copyRichContent(text, imageData) {
             try {
                 const items = [];
+
+                if (!navigator.clipboard) {
+                    alert('Tu navegador no soporta la API de portapapeles.');
+                    return;
+                }
+
                 if (text) {
-                    items.push(new ClipboardItem({
-                        'text/plain': new Blob([text], { type: 'text/plain' })
-                    }));
+                    items.push(new ClipboardItem({ 'text/plain': new Blob([text], { type: 'text/plain' }) }));
                 }
 
                 if (imageData) {
-                    const response = await fetch(imageData);
-                    const blob = await response.blob();
+                    const blob = await fetch(imageData).then(res => res.blob());
                     items.push(new ClipboardItem({ [blob.type]: blob }));
                 }
 
                 if (items.length > 0) {
                     await navigator.clipboard.write(items);
-                    showToast();  // Muestra el mensaje de "Copiado al portapapeles"
+                    showToast();
                 }
             } catch (error) {
                 console.error('Error al copiar:', error);
@@ -317,63 +320,90 @@
             if (shortcuts[lastWord]) {
                 const shortcut = shortcuts[lastWord];
                 let expansion = shortcut.text || '';
-
-                // Copiar el contenido expandido al portapapeles
+                
+                // Copiar el contenido expandido
                 await copyRichContent(expansion, shortcut.image);
                 
                 // Devolver el texto para la vista previa
                 return expansion + (shortcut.image ? '<br><img src="' + shortcut.image + '" class="preview-image">' : '');
             }
-
             return input;
         }
 
-        function handleInput(event) {
-            const inputText = editor.value;
-            expandText(inputText).then(expandedText => {
-                output.innerHTML = expandedText;
-            });
-        }
-
-        shortcutForm.addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            const shortcutText = document.getElementById('shortcutText').value;
-            const expansionText = document.getElementById('expansionText').value;
-            const imageFile = document.getElementById('imageFile').files[0];
-
-            if (shortcutText && expansionText) {
-                const imageURL = imageFile ? URL.createObjectURL(imageFile) : null;
-                shortcuts[shortcutText] = { text: expansionText, image: imageURL };
-                updateLocalStorage();
-                shortcutForm.reset();
-            }
-        });
-
         function deleteShortcut(shortcut) {
-            delete shortcuts[shortcut];
-            updateLocalStorage();
-        }
-
-        function exportShortcuts() {
-            const jsonString = JSON.stringify(shortcuts, null, 2);
-            const blob = new Blob([jsonString], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'shortcuts.json';
-            a.click();
-            URL.revokeObjectURL(url);
+            if (confirm(`¿Eliminar el atajo "${shortcut}"?`)) {
+                delete shortcuts[shortcut];
+                updateLocalStorage();
+            }
         }
 
         function clearAllShortcuts() {
-            shortcuts = {};
-            updateLocalStorage();
+            if (confirm('¿Estás seguro de que deseas eliminar todos los atajos?')) {
+                shortcuts = {};
+                updateLocalStorage();
+            }
         }
 
-        // Inicializar la interfaz
+        function exportShortcuts() {
+            const dataStr = JSON.stringify(shortcuts, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'mis-atajos.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        document.getElementById('importFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const imported = JSON.parse(event.target.result);
+                        shortcuts = { ...shortcuts, ...imported };
+                        updateLocalStorage();
+                        alert('¡Atajos importados con éxito!');
+                    } catch (error) {
+                        alert('Error al importar atajos. Revisa el formato del archivo.');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        shortcutForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const shortcut = document.getElementById('shortcutText').value;
+            const expansion = document.getElementById('expansionText').value;
+            const imageFile = document.getElementById('imageFile').files[0];
+
+            if (shortcut && expansion) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const imageUrl = imageFile ? reader.result : null;
+                    shortcuts[shortcut] = { text: expansion, image: imageUrl };
+                    updateLocalStorage();
+                    shortcutForm.reset();
+                };
+
+                if (imageFile) {
+                    reader.readAsDataURL(imageFile);
+                } else {
+                    reader.onloadend();
+                }
+            }
+        });
+
+        editor.addEventListener('input', async () => {
+            const expandedText = await expandText(editor.value);
+            output.innerHTML = expandedText;
+        });
+
         renderShortcutsList();
-        editor.addEventListener('input', handleInput);
     </script>
 </body>
 </html>
