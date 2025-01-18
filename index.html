@@ -399,41 +399,23 @@
             if (imageFile) {
                 const reader = new FileReader();
                 reader.onload = (event) => {
-                    shortcuts[shortcut] = {
-                        text: expansion,
-                        image: event.target.result
-                    };
+                    shortcuts[shortcut] = { text: expansion, image: event.target.result };
                     updateLocalStorage();
                     shortcutForm.reset();
                 };
                 reader.readAsDataURL(imageFile);
             } else {
-                shortcuts[shortcut] = {
-                    text: expansion
-                };
+                shortcuts[shortcut] = { text: expansion };
                 updateLocalStorage();
                 shortcutForm.reset();
             }
         });
 
         editor.addEventListener('input', async () => {
-            const text = editor.value;
-            const words = text.split(' ');
-            const lastWord = words[words.length - 1];
-
-            if (shortcuts[lastWord]) {
-                const expanded = await expandText(text);
-                output.innerHTML = expanded;
-                
-                // Restaurar el editor a solo un punto
-                editor.value = editor.value.slice(0, editor.value.lastIndexOf(lastWord)) + '.';
-                editor.selectionStart = editor.selectionEnd = editor.value.length;
-            } else {
-                output.innerHTML = text;
-            }
+            const expandedText = await expandText(editor.value);
+            output.innerHTML = expandedText;
         });
 
-        // Inicializar la lista de atajos al cargar
         renderShortcutsList();
     </script>
 </body>
